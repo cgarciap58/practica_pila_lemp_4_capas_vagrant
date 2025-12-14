@@ -20,7 +20,7 @@
       blc.vm.hostname = "balanceadorCesarGarcia"
       blc.vm.network "forwarded_port", guest: 443, host: 8443 # "Capa1 expuesta a red pública"
       blc.vm.network "private_network", ip: "192.168.10.2", virtualbox__intnet: "Red1"
-      blc.vm.provision "shell", path: "provisionLB.sh"
+      blc.vm.provision "shell", path: "provisionBalanceador.sh"
     end
 
 
@@ -44,7 +44,7 @@
       nfs.vm.hostname = "serverNFSCesarGarcia"
       nfs.vm.network "private_network", ip: "192.168.20.5", virtualbox__intnet: "Red2"
       nfs.vm.network "private_network", ip: "192.168.30.5", virtualbox__intnet: "Red3"
-      nfs.vm.provision "shell", path: "provisionNFS.sh"
+      nfs.vm.provision "shell", path: "provisionNFS_PHP.sh"
     end
 
     # Capa 3 - Balanceador BBDD
@@ -53,7 +53,7 @@
       dbproxy.vm.hostname = "proxyBBDDCesarGarcia"
       dbproxy.vm.network "private_network", ip: "192.168.30.6", virtualbox__intnet: "Red3"
       dbproxy.vm.network "private_network", ip: "192.168.40.6", virtualbox__intnet: "Red4"
-      dbproxy.vm.provision "shell", path: "provisionDB.sh"  
+      dbproxy.vm.provision "shell", path: "provisionProxyDB.sh"  
     end
 
 
