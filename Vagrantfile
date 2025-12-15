@@ -34,12 +34,12 @@
     end
 
     # Máquina Balanceador Nginx
-    config.vm.define "balanceadorCesarGarcia" do |blc|
-      blc.vm.hostname = "balanceadorCesarGarcia"
-      blc.vm.network "forwarded_port", guest: 80, host: 8000 # "Capa1 expuesta a red pública"
-      blc.vm.network "private_network", ip: "192.168.10.2", virtualbox__intnet: "Red1"
-      blc.vm.provision "shell", path: "provisionBalanceador.sh"
-    end
+    # config.vm.define "balanceadorCesarGarcia" do |blc|
+    #   blc.vm.hostname = "balanceadorCesarGarcia"
+    #   blc.vm.network "forwarded_port", guest: 80, host: 8000 # "Capa1 expuesta a red pública"
+    #   blc.vm.network "private_network", ip: "192.168.10.2", virtualbox__intnet: "Red1"
+    #   blc.vm.provision "shell", path: "provisionBalanceador.sh"
+    # end
 
     config.vm.define "serverDatos1CesarGarcia" do |db1|
       db1.vm.hostname = "serverDatos1CesarGarcia"
