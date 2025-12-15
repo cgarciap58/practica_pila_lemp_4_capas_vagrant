@@ -40,7 +40,7 @@
       web2.vm.provision "shell", path: "provisionWeb.sh"
     end
 
-    # Máquina Balanceador
+    # Máquina Balanceador Nginx
     config.vm.define "balanceadorCesarGarcia" do |blc|
       blc.vm.hostname = "balanceadorCesarGarcia"
       blc.vm.network "forwarded_port", guest: 80, host: 8000 # "Capa1 expuesta a red pública"
@@ -58,7 +58,7 @@
     config.vm.define "serverDatos1CesarGarcia" do |db1|
       db1.vm.hostname = "serverDatos1CesarGarcia"
       db1.vm.network "private_network", ip: "192.168.30.7", virtualbox__intnet: "Red3" # Red3 por ahora, debería ser 40.7
-      db1.vm.provision "shell", path: "provisionDBPrueba.sh"  
+      db1.vm.provision "shell", path: "provisionDB.sh"  
     end
 
     # config.vm.define "serverDatos2CesarGarcia" do |db2|
