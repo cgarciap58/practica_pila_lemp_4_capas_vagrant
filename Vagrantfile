@@ -33,6 +33,20 @@
       web1.vm.provision "shell", path: "provisionWeb.sh"
     end
 
+    # Máquina Balanceador Nginx
+    config.vm.define "balanceadorCesarGarcia" do |blc|
+      blc.vm.hostname = "balanceadorCesarGarcia"
+      blc.vm.network "forwarded_port", guest: 80, host: 8000 # "Capa1 expuesta a red pública"
+      blc.vm.network "private_network", ip: "192.168.10.2", virtualbox__intnet: "Red1"
+      blc.vm.provision "shell", path: "provisionBalanceador.sh"
+    end
+
+    config.vm.define "serverDatos1CesarGarcia" do |db1|
+      db1.vm.hostname = "serverDatos1CesarGarcia"
+      db1.vm.network "private_network", ip: "192.168.30.7", virtualbox__intnet: "Red3" # Red3 por ahora, debería ser 40.7
+      db1.vm.provision "shell", path: "provisionDB.sh"  
+    end
+
     # Máquina WebServer 2
     # config.vm.define "serverweb2CesarGarcia" do |web2|
     #   web2.vm.hostname = "serverweb2CesarGarcia"
@@ -41,13 +55,6 @@
     #   web2.vm.provision "shell", path: "provisionWeb.sh"
     # end
 
-    # Máquina Balanceador Nginx
-    # config.vm.define "balanceadorCesarGarcia" do |blc|
-    #   blc.vm.hostname = "balanceadorCesarGarcia"
-    #   blc.vm.network "forwarded_port", guest: 80, host: 8000 # "Capa1 expuesta a red pública"
-    #   blc.vm.network "private_network", ip: "192.168.10.2", virtualbox__intnet: "Red1"
-    #   blc.vm.provision "shell", path: "provisionBalanceador.sh"
-    # end
 
     # config.vm.define "proxyBBDDCesarGarcia" do |dbproxy|
     #   dbproxy.vm.hostname = "proxyBBDDCesarGarcia"
@@ -56,11 +63,6 @@
     #   dbproxy.vm.provision "shell", path: "provisionProxyDB.sh"  
     # end
 
-    config.vm.define "serverDatos1CesarGarcia" do |db1|
-      db1.vm.hostname = "serverDatos1CesarGarcia"
-      db1.vm.network "private_network", ip: "192.168.30.7", virtualbox__intnet: "Red3" # Red3 por ahora, debería ser 40.7
-      db1.vm.provision "shell", path: "provisionDB.sh"  
-    end
 
     # config.vm.define "serverDatos2CesarGarcia" do |db2|
     #   db2.vm.hostname = "serverDatos2CesarGarcia"
