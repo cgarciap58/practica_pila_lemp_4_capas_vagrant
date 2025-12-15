@@ -10,6 +10,7 @@ sudo apt update
 sudo apt install -y php-fpm 
 sudo apt install -y php8.2-mysql
 sudo apt install -y php8.2-mysql php8.2-curl php8.2-zip
+sudo apt install -y mariadb-client
 
 sudo sed -i 's|^listen = .*|listen = 192.168.20.5:9000|' /etc/php/8.2/fpm/pool.d/www.conf
 sleep 1

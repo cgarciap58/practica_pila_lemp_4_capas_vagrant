@@ -8,9 +8,6 @@ sudo apt install -y nginx
 # Backend webservers (se declara como lista y así es más escalable)
 WEB_BACKENDS=("192.168.10.3" "192.168.10.4")
 
-
-# WEB_BACKENDS=("192.168.10.3" "192.168.10.4")
-
 # Configuración del upstream
 UPSTREAM_CONF="/etc/nginx/conf.d/upstream.conf"
 sudo tee $UPSTREAM_CONF > /dev/null <<EOF
@@ -37,7 +34,6 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 EOF
