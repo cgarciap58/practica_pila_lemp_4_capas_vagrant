@@ -3,7 +3,7 @@
 # Instala Nginx y configura los servicios básicos
 
 NFS_SERVER="192.168.20.5"
-NFS_EXPORT="/srv/nfs/wordpress"
+NFS_EXPORT="/var/www/wordpress"
 WEB_ROOT="/var/www/wordpress"
 
 sudo apt update
@@ -31,7 +31,7 @@ server {
         # Reenvio a PHP-FPM
         fastcgi_pass 192.168.20.5:9000;
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /srv/nfs/wordpress$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME /var/www/wordpress$fastcgi_script_name;
     }
 }
 EOF

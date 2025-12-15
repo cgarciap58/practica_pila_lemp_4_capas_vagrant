@@ -6,6 +6,7 @@ sudo apt update
 sudo apt install mariadb-server -y
 sudo apt install net-tools -y
 
+user_wp="wpuser"
 root_pass="roottoor"
 pass_wp="wppw"
 
@@ -29,8 +30,8 @@ EOF
 
 mysql -u root -p"$root_pass" -e "CREATE DATABASE wordpress;"
 mysql -u root -p"$root_pass" -e "SHOW DATABASES;"
-mysql -u root -p"$root_pass" -e "CREATE USER 'wpuser'@'192.168.30.%' IDENTIFIED BY '$pass_wp';"
-mysql -u root -p"$root_pass" -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'192.168.30.%';"
+mysql -u root -p"$root_pass" -e "CREATE USER '$user_wp'@'192.168.30.%' IDENTIFIED BY '$pass_wp';"
+mysql -u root -p"$root_pass" -e "GRANT ALL PRIVILEGES ON wordpress.* TO '$user_wp'@'192.168.30.%';"
 mysql -u root -p"$root_pass" -e "FLUSH PRIVILEGES;"
 
 echo "Base de datos y usuario configurados correctamente."

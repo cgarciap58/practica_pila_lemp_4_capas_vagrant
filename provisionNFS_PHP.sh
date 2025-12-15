@@ -19,10 +19,10 @@ sudo systemctl restart php8.2-fpm
 
 # Configurar NFS
 sudo apt install -y nfs-kernel-server
-sudo mkdir -p /srv/nfs/wordpress
-sudo chown -R www-data:www-data /srv/nfs/wordpress
-sudo chmod 755 /srv/nfs/wordpress
-echo "/srv/nfs/wordpress 192.168.20.3(rw,sync,no_subtree_check) 192.168.20.4(rw,sync,no_subtree_check)" | sudo tee /etc/exports
+sudo mkdir -p /var/www/wordpress
+sudo chown -R www-data:www-data /var/www/wordpress
+sudo chmod 755 /var/www/wordpress
+echo "/var/www/wordpress 192.168.20.3(rw,sync,no_subtree_check) 192.168.20.4(rw,sync,no_subtree_check)" | sudo tee /etc/exports
 sudo exportfs -ra
 sudo systemctl enable nfs-kernel-server
 sudo systemctl restart nfs-kernel-server
@@ -33,7 +33,7 @@ pass_wp="wppw"
 ip_db="192.168.30.7"
 db_wp="wordpress"
 
-WP_DIR="/srv/nfs/wordpress"
+WP_DIR="/var/www/wordpress"
 
 
 if [ ! -f "$WP_DIR/wp-config.php" ]; then
@@ -53,13 +53,7 @@ if [ ! -f "$WP_DIR/wp-config.php" ]; then
     sudo sed -i "s/'username_here'/'$user_wp'/g" wp-config.php
     sudo sed -i "s/'password_here'/'$pass_wp'/g" wp-config.php
     sudo sed -i "s/'localhost'/'$ip_db'/" wp-config.php
-    
-    # Añadir configuración para evitar redirecciones HTTPS forzadas
-    sudo sed -i "/That's all, stop editing!/i \
-define('WP_HOME', 'http://' . \$_SERVER['HTTP_HOST']); \
-define('WP_SITEURL', 'http://' . \$_SERVER['HTTP_HOST']); \
-define('FORCE_SSL_ADMIN', false); \
-" wp-config.php
+
 fi
 
-sudo chown -R www-data:www-data /srv/nfs/wordpress
+sudo chown -R www-data:www-data /var/www/wordpress
