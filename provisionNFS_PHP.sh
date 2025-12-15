@@ -8,9 +8,13 @@ sudo apt update
 
 # Configurar PHP-FPM
 sudo apt install -y php-fpm 
+sudo apt install -y php8.2-mysql
+sudo apt install -y php8.2-mysql php8.2-curl php8.2-zip
+
 sudo sed -i 's|^listen = .*|listen = 192.168.20.5:9000|' /etc/php/8.2/fpm/pool.d/www.conf
 sleep 1
 sudo systemctl restart php8.2-fpm
+
 
 # Configurar NFS
 sudo apt install -y nfs-kernel-server
@@ -48,11 +52,12 @@ if [ ! -f "$WP_DIR/wp-config.php" ]; then
     sudo sed -i "s/'username_here'/'$user_wp'/g" wp-config.php
     sudo sed -i "s/'password_here'/'$pass_wp'/g" wp-config.php
     sudo sed -i "s/'localhost'/'$ip_db'/" wp-config.php
+    
+    # Añadir configuración para evitar redirecciones HTTPS forzadas
     sudo sed -i "/That's all, stop editing!/i \
-if (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') { \
-    \$_SERVER['HTTPS'] = 'on'; \
-    \$_SERVER['SERVER_PORT'] = 443; \
-} \
+define('WP_HOME', 'http://' . \$_SERVER['HTTP_HOST']); \
+define('WP_SITEURL', 'http://' . \$_SERVER['HTTP_HOST']); \
+define('FORCE_SSL_ADMIN', false); \
 " wp-config.php
 fi
 

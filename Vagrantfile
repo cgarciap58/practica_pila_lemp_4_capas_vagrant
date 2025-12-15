@@ -58,7 +58,7 @@
 
     config.vm.define "serverDatos1CesarGarcia" do |db1|
       db1.vm.hostname = "serverDatos1CesarGarcia"
-      db1.vm.network "private_network", ip: "192.168.30.7", virtualbox__intnet: "Red3" # Debería ser 40.7
+      db1.vm.network "private_network", ip: "192.168.30.7", virtualbox__intnet: "Red3" # Red3 por ahora, debería ser 40.7
       db1.vm.provision "shell", path: "provisionDBPrueba.sh"  
     end
 
