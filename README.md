@@ -1,16 +1,16 @@
 # practica_pila_lemp_4_capas_vagrant
 Despliegue de una aplicación web de Gestión de Usuarios en una infraestructura LEMP de alta disponibilidad de 4 capas, con balanceo de carga Nginx, servidores web con PHP-FPM y NFS, proxy de bases de datos con HAProxy y clúster MariaDB.
 
-# Despliegue de WordPress en AWS con Alta Disponibilidad, en tres capas
+# Despliegue de WordPress en Vagrant en 4 capas
 
-Este proyecto contiene scripts de aprovisionamiento para desplegar un sitio de WordPress altamente disponible en infraestructura AWS. El despliegue consta de cuatro componentes principales:
+Este proyecto contiene scripts de aprovisionamiento para desplegar un sitio de WordPress altamente disponible en infraestructura Vagrant mediante 4 capas. El despliegue consta de cinco componentes principales:
 
-1. **Servidor NFS** - Para almacenamiento compartido
-2. **Servidor de Base de Datos** - MariaDB para WordPress
-3. **Servidores Web** - Múltiples servidores Apache con PHP
-4. **Balanceador de Carga** - HAProxy con terminación SSL
+1. **Balanceador de carga Nginx** - Para distribuir el tráfico entre los servidores web
+2. **Servidores Web** - Para ejecutar WordPress con Nginx. Sirven páginas estáticas.
+3. **Servidor NFS+PHP-FPM** - Ejecuta el PHP que piden los servidores, y contiene los ficheros necesarios para mantener una sola 'fuente de verdad' entre los distintos servidores
+4. **Balanceado BBDD HAProxy** - Distribuye las conexiones a las bases de datos MariaDB en clúster
+5. **Clúster MariaDB** - Conjunto de servidores (dos) MariaDB en modo galera con HAProxy como balanceador
 
-El Wordpress está alojado en <a href="https://wpdecesar.ddns.net">wpdecesar.ddns.net</a>
 
 # Prueba de funcionamiento
 

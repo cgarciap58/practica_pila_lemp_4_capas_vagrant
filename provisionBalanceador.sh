@@ -1,50 +1,44 @@
 #!/bin/bash
-# Script for HAProxy Load Balancer with HTTPS termination
+# Script de provisionamiento para el balanceador Nginx
+# Instala Nginx y configura los servicios básicos
 
 sudo apt update
-sudo apt install -y haproxy openssl
+sudo apt install -y nginx
 
-# Create self-signed SSL certificate for Vagrant tests
-sudo openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
-  -keyout /etc/haproxy/selfsigned.key \
-  -out /etc/haproxy/selfsigned.crt \
-  -subj "/C=US/ST=None/L=None/O=LocalDev/OU=Dev/CN=lb.local"
+# Backend webservers (se declara como lista y así es más escalable)
+WEB_BACKENDS=("192.168.10.3" "192.168.10.4")
 
-# Combine key + cert into .pem for HAProxy
-cat /etc/haproxy/selfsigned.key /etc/haproxy/selfsigned.crt \
-  | sudo tee /etc/haproxy/selfsigned.pem >/dev/null
-
-# Overwrite haproxy.cfg
-sudo tee /etc/haproxy/haproxy.cfg >/dev/null <<'EOF'
-global
-    maxconn 2048
-    log /dev/log local0
-
-defaults
-    mode http
-    option httplog
-    option dontlognull
-    timeout connect 5s
-    timeout client 50s
-    timeout server 50s
-
-# HTTP -> HTTPS redirect
-frontend http_front
-    bind *:80
-    redirect scheme https code 301
-
-# HTTPS termination
-frontend https_front
-    bind *:443 ssl crt /etc/haproxy/selfsigned.pem
-    option forwardfor
-    http-request set-header X-Forwarded-Proto https
-    default_backend wordpress_nodes
-
-backend wordpress_nodes
-    balance roundrobin
-    option httpchk GET /
-    server ws1 192.168.10.21:80 check
-    server ws2 192.168.10.22:80 check
+# Configuración del upstream
+UPSTREAM_CONF="/etc/nginx/conf.d/upstream.conf"
+sudo tee $UPSTREAM_CONF > /dev/null <<EOF
+upstream backend {
 EOF
 
-sudo systemctl restart haproxy
+for server in "${WEB_BACKENDS[@]}"; do
+  echo "    server $server;" | sudo tee -a $UPSTREAM_CONF
+done
+
+sudo tee -a $UPSTREAM_CONF > /dev/null <<EOF
+}
+EOF
+
+# Configuración del sitio principal
+NGINX_SITE="/etc/nginx/sites-available/loadbalancer"
+sudo tee $NGINX_SITE > /dev/null <<'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
+sudo ln -sf /etc/nginx/sites-available/loadbalancer /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo systemctl restart nginx
+sudo systemctl enable nginx
