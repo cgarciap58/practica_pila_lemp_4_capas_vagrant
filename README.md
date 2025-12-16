@@ -48,7 +48,7 @@ Cubre las siguientes cuestiones:
 
 <a name="intro"></a>
 
-![Prueba de funcionamiento](./CapturaPantallaWP.png)
+![Esquema](./Capturas_de_pantalla/esquema_arquitectura.png)
 
 En este proyecto se implementa una pila LEMP (Linux, Nginx, MySQL, PHP) en una arquitectura de 4 capas para garantizar alta disponibilidad y escalabilidad.
 La arquitectura se despliega sobre Vagrant utilizando VirtualBox. La parte más complicada de esta práctica reside en la configuración de la comunicación entre los diferentes componentes y la sincronización de datos.
@@ -56,7 +56,6 @@ La arquitectura se despliega sobre Vagrant utilizando VirtualBox. La parte más 
 Por un lado, tenemos un clúster de BBDD configurado con HAProxy para balanceo de carga y alta disponibilidad, lo cual supone un desafío frente a una implementación más simple de una BBDD central, pero nos permite una mayor escalabidad, mejor rendimiento y tolerancia a fallos.
 
 Otro desafío de la práctica es la gestión de PHP de manera totalmente separada de la gestión del servicio web. En este laboratorio, los servidores web son ambos capaces de comunicarse con un servidor de doble función (NFS por un lado, y PHP-FPM por otro) que ejecuta los procesos PHP, haciendo las consultas pertinentes de base de datos al servidor HAProxy (que decide a cuál de las dos BBDDD se la manda) y que por otro lado devuelve PHP procesado a los servidores para que estos sólo se encarguen de servir html estático.
-
 
 <a name="aprov-nfs"></a>
 
