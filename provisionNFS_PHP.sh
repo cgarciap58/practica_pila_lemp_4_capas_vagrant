@@ -41,7 +41,7 @@ if [ ! -f "$APP_DIR/index.php" ]; then
     echo "Aún no existe la app, descargándolo..."
 
     cd /tmp/
-    git clone https://github.com/josejuansanchez/iaw-practica-lamp.git
+    git clone https://github.com/cgarciap58/practica_pila_lemp_4_capas_vagrant.git
     sudo cp -r iaw-practica-lamp/src/* $APP_DIR/
     sudo rm -rf iaw-practica-lamp
     cd $APP_DIR
