@@ -59,11 +59,11 @@ Otro desafío de la práctica es la gestión de PHP de manera totalmente separad
 
 <a name="aprov-nfs"></a>
 
-## 1. Aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](aprov_NFS_PHP_FPM.sh))
+## 1. Explicación del aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](aprov_NFS_PHP_FPM.sh))
 
 Por cuestiones de importancia, tiene más sentido empezar explicando el servidor NFS + PHP-FPM porque es el primero en lanzarse y resulta vital para otros servicios.
 
-### Explicación Detallada
+### Instalación
 
 ```bash
 
@@ -93,6 +93,8 @@ sudo systemctl restart php8.2-fpm
 
 ```
 
+### Gestión de directorios
+
 ```bash
 
 APP_DIR="/var/www/app"
@@ -117,14 +119,64 @@ Se añade la subred 192.168.20.0 como permitida para acceder a este directorio c
 
 Se actualiza y reinicia el servidor NFS.
 
+## 2. Explicación del aprovisionamiento de los servidores web (Nginx + PHP-FPM) - `provisionWeb.sh`
+
+### Actualización e instalación de dependencias
 ```bash
+sudo apt update
+sudo apt install -y nginx
+sudo apt install -y nfs-common
 ```
+Instala Nginx como servidor web y nfs-common para poder montar comparticiones NFS.
+
+### Montaje de la aplicación via NFS
+```bash
+sudo mkdir -p $APP_DIR
+echo "$NFS_SERVER:$NFS_EXPORT $APP_DIR nfs defaults,_netdev 0 0" | sudo tee -a /etc/fstab
+sudo mount $NFS_SERVER:$NFS_EXPORT $APP_DIR
+```
+Crea el directorio local, añade la entrada en fstab para montar automáticamente en reboots y monta la compartición NFS con la aplicación.
+
+### Configuración de Nginx para PHP
+```bash
+NGINX_SITE="/etc/nginx/sites-available/app"
+sudo tee $NGINX_SITE > /dev/null << 'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    root /var/www/app;
+    index index.php index.html;
+
+    location / {
+        index index.php index.html;
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass 192.168.20.5:9000;
+        fastcgi_param SCRIPT_FILENAME /var/www/app$fastcgi_script_name;
+    }
+}
+EOF
+```
+Configura Nginx para servir archivos estáticos y delegar procesamiento PHP a PHP-FPM en 192.168.20.5:9000. Reescribe URLs para aplicaciones tipo MVC/SPA.
+
+### Habilitación y reinicio
+```bash
+sudo ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo systemctl restart nginx.service
+```
+Activa la configuración de la aplicación, desactiva el sitio default y reinicia Nginx.
 
 
+<a name="aprov-balanceador-web"></a>
 
-# Scripts de Provisioning - Guía Detallada
 
-## 1. Load Balancer (Nginx) - `provisionBalanceador.sh`
+## 3. Explicación del aprovisionamiento del balanceador Web (Nginx) - `provisionBalanceador.sh`
 
 ### Actualización del sistema e instalación de Nginx
 ```bash
@@ -325,55 +377,3 @@ Habilita HAProxy para iniciar automáticamente en arranques y reinicia el servic
 
 ---
 
-## 5. Servidores Web (Nginx + PHP-FPM) - `provisionWeb.sh`
-
-### Actualización e instalación de dependencias
-```bash
-sudo apt update
-sudo apt install -y nginx
-sudo apt install -y nfs-common
-```
-Instala Nginx como servidor web y nfs-common para poder montar comparticiones NFS.
-
-### Montaje de la aplicación via NFS
-```bash
-sudo mkdir -p $APP_DIR
-echo "$NFS_SERVER:$NFS_EXPORT $APP_DIR nfs defaults,_netdev 0 0" | sudo tee -a /etc/fstab
-sudo mount $NFS_SERVER:$NFS_EXPORT $APP_DIR
-```
-Crea el directorio local, añade la entrada en fstab para montar automáticamente en reboots y monta la compartición NFS con la aplicación.
-
-### Configuración de Nginx para PHP
-```bash
-NGINX_SITE="/etc/nginx/sites-available/app"
-sudo tee $NGINX_SITE > /dev/null << 'EOF'
-server {
-    listen 80;
-    server_name _;
-
-    root /var/www/app;
-    index index.php index.html;
-
-    location / {
-        index index.php index.html;
-        try_files $uri $uri/ /index.php?$args;
-    }
-
-    location ~ \.php$ {
-        include fastcgi_params;
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass 192.168.20.5:9000;
-        fastcgi_param SCRIPT_FILENAME /var/www/app$fastcgi_script_name;
-    }
-}
-EOF
-```
-Configura Nginx para servir archivos estáticos y delegar procesamiento PHP a PHP-FPM en 192.168.20.5:9000. Reescribe URLs para aplicaciones tipo MVC/SPA.
-
-### Habilitación y reinicio
-```bash
-sudo ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo systemctl restart nginx.service
-```
-Activa la configuración de la aplicación, desactiva el sitio default y reinicia Nginx.
