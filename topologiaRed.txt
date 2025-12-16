@@ -1,0 +1,8 @@
+192.168:
+    10.2 - LB - balanceadorCesarGarcia
+    10.3 / 20.3 - Web1 - serverweb1CesarGarcia
+    10.4 / 20.4 - Web2 - serverweb2CesarGarcia
+    20.5 / 30.5 - NFS - serverNFSCesarGarcia
+    30.6 / 40.6- ProxyBBDD - proxyBBDDCesarGarcia
+    40.7 - DB1 - serverDatos1CesarGarcia
+    40.8 - DB2 - serverDatos2CesarGarcia

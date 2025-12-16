@@ -6,31 +6,57 @@ Despliegue de una aplicación web de gestión de usuarios personalizada, en una 
 - HAProxy para gestionar acceso a la base de datos
 - Clúster MariaDB en modo galera
 
-# Índice
+# Índice 
 
-- [1. Aprovisionamiento del Servidor NFS](#nfs-server)
-- [2. Aprovisionamiento del Servidor de Web](#database-server)
-- [3. Aprovisionamiento de los servidores de BBDD](#web-servers)
-- [4. Aprovisionamiento de HAProxy](#haproxy)
-- [5. Modificaciones en PHP](#php-modifications)
-- [6. Disclaimer](#disclaimer)
-
-
+- [1. Vídeo de demonstración](#video)
+- [2. Introducción](#intro)
+- [3. Explicación del aprovisionamiento del Servidor NFS](#aprov-nfs)
+- [4. Explicación del aprovisionamiento de los servidores web](#aprov-web)
+- [5. Explicación del aprovisionamiento del balanceador Web](#aprov-balanceador-web)
+- [6. Explicación del aprovisionamiento de la BBDD](#aprov-BBDD)
+- [7. Explicación del aprovisionamiento del balanceador de BBDD](#aprov-HAProxy)
+- [8. Explicación de la configuración en PHP](#php-configuration)
+- [9. Disclaimer](#disclaimer)
 
 
 # Vídeo demonstración
 
+<a name="video"></a>
+
+![Prueba de funcionamiento](./Capturas_de_pantalla/video_demonstracion.mp4)
+
+El vídeo también está disponible aquí:
+
+https://drive.google.com/file/d/1ueWV8WSCezljir5RC7PGWgcWkHspnBYd/view?usp=drive_link
+
+Cubre las siguientes cuestiones:
+
+
+    Mostrar estado de las m�quinas: vagrant status.
+    Ping cada m�quina a todas las dem�s.
+    Sistemas de archivos montados en los servidores web: df -h en cada servidor web.
+    Acceso a servidor MariaDB desde las m�quinas serverweb1 y serverweb2.
+    Acceso a Wordpress desde la m�quina anfitriona (Windows) y el puerto mapeado.
+    Mostrar el fichero /var/log/nginx/access.log en el balanceador de carga.
+    Mostrar el fichero /var/log/nginx/access.log en los servidores web.
+    Para el servidor web serverweb1 y volver a acceder a wordpress desde la m�quina anfitriona.
+    Mostrar el fichero /var/log/nginx/access.log en los servidores web.
+    Mostrar el contenido de la tabla Usuarios en ambos servidores mariaDB.
+
+
+# Introducción
+
+<a name="intro"></a>
+
 ![Prueba de funcionamiento](./CapturaPantallaWP.png)
 
-# Índice 
+En este proyecto se implementa una pila LEMP (Linux, Nginx, MySQL, PHP) en una arquitectura de 4 capas para garantizar alta disponibilidad y escalabilidad.
+La arquitectura se despliega sobre Vagrant utilizando VirtualBox. La parte más complicada de esta práctica reside en la configuración de la comunicación entre los diferentes componentes y la sincronización de datos.
 
-- [1. Aprovisionamiento del Servidor NFS](#aprov-nfs)
-- [2. Aprovisionamiento de los servidores web](#aprov-web)
-- [3. Aprovisionamiento del balanceador Web](#aprov-balanceador-web)
-- [4. Aprovisionamiento de la BBDD](#aprov-BBDD)
-- [5. Aprovisionamiento del balanceador de BBDD](#aprov-HAProxy)
-- [6. Configuración en PHP](#php-configuration)
-- [7. Disclaimer](#disclaimer)
+Por un lado, tenemos un clúster de BBDD configurado con HAProxy para balanceo de carga y alta disponibilidad, lo cual supone un desafío frente a una implementación más simple de una BBDD central, pero nos permite una mayor escalabidad, mejor rendimiento y tolerancia a fallos.
+
+Otro desafío de la práctica es la gestión de PHP de manera totalmente separada de la gestión del servicio web. En este laboratorio, los servidores web son ambos capaces de comunicarse con un servidor de doble función (NFS por un lado, y PHP-FPM por otro) que ejecuta los procesos PHP, haciendo las consultas pertinentes de base de datos al servidor HAProxy (que decide a cuál de las dos BBDDD se la manda) y que por otro lado devuelve PHP procesado a los servidores para que estos sólo se encarguen de servir html estático.
+
 
 <a name="aprov-nfs"></a>
 
@@ -38,12 +64,6 @@ Despliegue de una aplicación web de gestión de usuarios personalizada, en una 
 
 Este script configura un servidor NFS (Network File System) para compartir archivos de WordPress entre múltiples servidores web.
 
-### Componentes Clave
-
-- **Instalación de NFS**: Instala el paquete del servidor NFS
-- **Configuración de Directorios**: Crea `/srv/nfs/wordpress` con los permisos adecuados
-- **Exportación NFS**: Hace el directorio disponible para los servidores web
-- **Gestión del Servicio**: Habilita y reinicia el servicio NFS
 
 ### Explicación Detallada
 

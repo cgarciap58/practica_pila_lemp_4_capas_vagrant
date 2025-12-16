@@ -9,13 +9,14 @@ echo "Creating Nginx load balancer configuration..."
 cat > /etc/nginx/sites-available/balanceador <<EOL
 upstream backend {
     server 192.168.10.3;
+    server 192.168.10.4;
 }
 
 server {
     listen 80;
 
     location / {
-        proxy_pass http://192.168.10.3:80;
+        proxy_pass http://backend;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
