@@ -13,10 +13,11 @@ Despliegue de una aplicación web de gestión de usuarios personalizada, en una 
 - [3. Explicación del aprovisionamiento del Servidor NFS](#aprov-nfs)
 - [4. Explicación del aprovisionamiento de los servidores web](#aprov-web)
 - [5. Explicación del aprovisionamiento del balanceador Web](#aprov-balanceador-web)
-- [6. Explicación del aprovisionamiento de la BBDD](#aprov-BBDD)
-- [7. Explicación del aprovisionamiento del balanceador de BBDD](#aprov-HAProxy)
-- [8. Explicación de la configuración en PHP](#php-configuration)
-- [9. Disclaimer](#disclaimer)
+- [6. Explicación del aprovisionamiento de la BBDD, nodo 1](#aprov-BBDD-1)
+- [7. Explicación del aprovisionamiento de la BBDD, nodo 2](#aprov-BBDD-2)
+- [8. Explicación del aprovisionamiento del balanceador de BBDD](#aprov-HAProxy)
+- [9. Explicación de la configuración en PHP](#php-configuration)
+- [10. Disclaimer](#disclaimer)
 
 
 # Vídeo demonstración
@@ -59,7 +60,7 @@ Otro desafío de la práctica es la gestión de PHP de manera totalmente separad
 
 <a name="aprov-nfs"></a>
 
-## 1. Explicación del aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](aprov_NFS_PHP_FPM.sh))
+# 3. Explicación del aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](aprov_NFS_PHP_FPM.sh))
 
 Por cuestiones de importancia, tiene más sentido empezar explicando el servidor NFS + PHP-FPM porque es el primero en lanzarse y resulta vital para otros servicios.
 
@@ -119,7 +120,48 @@ Se añade la subred 192.168.20.0 como permitida para acceder a este directorio c
 
 Se actualiza y reinicia el servidor NFS.
 
-## 2. Explicación del aprovisionamiento de los servidores web (Nginx + PHP-FPM) - `provisionWeb.sh`
+### Exportación de compartición NFS
+```bash
+echo "$APP_DIR 192.168.20.0/24(rw,sync,no_subtree_check)" | sudo tee /etc/exports
+sudo exportfs -ra
+sudo systemctl enable nfs-kernel-server
+sudo systemctl restart nfs-kernel-server
+```
+Configura NFS para que la subred 192.168.20.0/24 (donde están los servidores web) pueda montar `/var/www/app` con permisos de lectura-escritura. `Sync` asegura que los cambios se escriban inmediatamente en disco. `exportfs -ra` recarga la configuración sin reiniciar el demonio NFS.
+
+### Descarga de la aplicación
+```bash
+if [ ! -f "$APP_DIR/index.php" ]; then
+    echo "Aún no existe la app, descargándolo..."
+
+    cd /tmp/
+    git clone https://github.com/cgarciap58/practica_pila_lemp_4_capas_vagrant.git
+    sudo cp -r practica_pila_lemp_4_capas_vagrant/src/* $APP_DIR/
+    sudo rm -rf practica_pila_lemp_4_capas_vagrant
+    cd $APP_DIR
+
+fi
+```
+Verifica si la aplicación ya existe (index.php). Si no existe, clona el repositorio, copia los archivos fuente a `/var/www/app` y limpia archivos temporales. Esta lógica evita descargas repetidas en aprovisionamientos múltiples.
+
+### Habilitación de errores en PHP
+```bash
+sudo sed -i 's/display_errors = .*/display_errors = On/' /etc/php/8.2/fpm/php.ini
+sudo sed -i 's/display_startup_errors = .*/display_startup_errors = On/' /etc/php/8.2/fpm/php.ini
+sudo systemctl restart php8.2-fpm
+```
+Activa la visualización de errores de PHP en desarrollo para facilitar debugging. En producción esto debería estar desactivado por seguridad.
+
+### Configuración de permisos finales
+```bash
+sudo chown -R www-data:www-data $APP_DIR
+sudo chmod -R 755 $APP_DIR
+```
+Asegura que www-data es el propietario de todos los archivos de la aplicación y que tienen permisos 755 (rwxr-xr-x), permitiendo lectura y ejecución para usuarios del sistema.
+
+<a name="aprov-web"></a>
+
+# 4. Explicación del aprovisionamiento de los servidores web (Nginx + PHP-FPM) - `provisionWeb.sh`
 
 ### Actualización e instalación de dependencias
 ```bash
@@ -176,7 +218,7 @@ Activa la configuración de la aplicación, desactiva el sitio default y reinici
 <a name="aprov-balanceador-web"></a>
 
 
-## 3. Explicación del aprovisionamiento del balanceador Web (Nginx) - `provisionBalanceador.sh`
+# 5. Explicación del aprovisionamiento del balanceador Web (Nginx) - `provisionBalanceador.sh`
 
 ### Actualización del sistema e instalación de Nginx
 ```bash
@@ -229,7 +271,9 @@ Valida la sintaxis de la configuración y reinicia el servicio para aplicar camb
 
 ---
 
-## 2. Servidor de Base de Datos 1 (Galera Master) - `provisionDB1.sh`
+<a name="aprov-BBDD-1"></a>
+
+# 6. Explicación del aprovisionamiento de la BBDD, nodo 1 - `provisionDB1.sh`
 
 ### Actualización e instalación de MariaDB con Galera
 ```bash
@@ -302,8 +346,10 @@ sudo galera_new_cluster
 Detiene MariaDB, mata procesos residuales e inicializa este servidor como nodo maestro del cluster Galera.
 
 ---
+<a name="aprov-BBDD-1"></a>
 
-## 3. Servidor de Base de Datos 2 (Galera Slave) - `provisionDB2.sh`
+
+# 7. Explicación del aprovisionamiento de la BBDD, nodo 1 - `provisionDB2.sh`
 
 ### Actualización e instalación de MariaDB con Galera
 ```bash
@@ -341,8 +387,9 @@ sudo systemctl restart mariadb
 Reinicia MariaDB para aplicar la configuración Galera y unirse automáticamente al cluster existente.
 
 ---
+<a name="aprov-HAProxy"></a>
 
-## 4. Proxy de Base de Datos (HAProxy) - `provisionProxyDB.sh`
+# 8. Explicación del balanceador de base de datos - `provisionProxyDB.sh`
 
 ### Actualización e instalación de HAProxy
 ```bash
@@ -377,3 +424,23 @@ Habilita HAProxy para iniciar automáticamente en arranques y reinicia el servic
 
 ---
 
+## 9. Configuración de Base de Datos - `src/config.php`
+
+### Definición de constantes de conexión
+```php
+define('DB_HOST', '192.168.30.6');
+define('DB_NAME', 'web0app');
+define('DB_USER', 'dbuser');
+define('DB_PASSWORD', 'dbpass');
+```
+Define las constantes globales para conexión a la base de datos. `DB_HOST` apunta a **192.168.30.6** que es la dirección del HAProxy (proxy de base de datos), no directamente a los servidores MariaDB. Esto permite que las conexiones se distribuyan automáticamente entre db1 y db2 a través del balanceo de carga de HAProxy.
+
+### Establecimiento de conexión MySQLi
+```php
+$mysqli = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
+
+if (!$mysqli) {
+    die('Database connection failed: ' . mysqli_connect_error());
+}
+```
+Crea una conexión a la base de datos usando la extensión MySQLi (MySQL Improved). Si la conexión falla, el script termina mostrando el error específico. Esta conexión se establece cada vez que se incluye este archivo, permitiendo que toda la aplicación utilice `$mysqli` como objeto de conexión global.
