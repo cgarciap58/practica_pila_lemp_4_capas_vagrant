@@ -10,7 +10,7 @@ $result = mysqli_query($mysqli, "SELECT * FROM users ORDER BY id DESC");
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Homepage</title>
+	<title>Página de César</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"  crossorigin="anonymous">	
 </head>
 
@@ -19,10 +19,10 @@ $result = mysqli_query($mysqli, "SELECT * FROM users ORDER BY id DESC");
 	<div class="jumbotron">
       <h1 class="display-4">Página de gestión de usuarios de César García</h1>
     </div>	
-	<a href="add.html" class="btn btn-primary">Add New Data</a><br/><br/>
+	<a href="add.html" class="btn btn-primary">Añadir más datos</a><br/><br/>
 	<table width='80%' border=0 class="table">
 
-	<tr bgcolor='#CCCCCC'>
+	<tr bgcolor='#ad9797ff'>
 		<td>Nombre</td>
 		<td>Edad</td>
 		<td>Email</td>

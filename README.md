@@ -1,7 +1,22 @@
-# practica_pila_lemp_4_capas_vagrant
-Despliegue de una aplicación web de Gestión de Usuarios en una infraestructura LEMP de alta disponibilidad de 4 capas, con balanceo de carga Nginx, servidores web con PHP-FPM y NFS, proxy de bases de datos con HAProxy y clúster MariaDB.
+# Pila LEMP en 4 capas
+Despliegue de una aplicación web de gestión de usuarios personalizada, en una infraestructura LEMP de alta disponibilidad de 4 capas, que son:
+- Balanceo de carga de servidores Nginx
+- Servidores Web
+- Servidor de procesamiento PHP (PHP-FPM) y servidor gestor almacenamiento compartido (NFS)
+- HAProxy para gestionar acceso a la base de datos
+- Clúster MariaDB en modo galera
 
-# Despliegue de WordPress en Vagrant en 4 capas
+# Índice
+
+- [1. Aprovisionamiento del Servidor NFS](#nfs-server)
+- [2. Aprovisionamiento del Servidor de Web](#database-server)
+- [3. Aprovisionamiento de los servidores de BBDD](#web-servers)
+- [4. Aprovisionamiento de HAProxy](#haproxy)
+- [5. Modificaciones en PHP](#php-modifications)
+- [6. Disclaimer](#disclaimer)
+
+
+con balanceo de carga Nginx, servidores web con PHP-FPM y NFS, proxy de bases de datos con HAProxy y clúster MariaDB.
 
 Este proyecto contiene scripts de aprovisionamiento para desplegar un sitio de WordPress altamente disponible en infraestructura Vagrant mediante 4 capas. El despliegue consta de cinco componentes principales:
 
@@ -18,14 +33,14 @@ Este proyecto contiene scripts de aprovisionamiento para desplegar un sitio de W
 
 # Índice 
 
-- [1. Aprovisionamiento del Servidor NFS](#nfs-server)
-- [2. Aprovisionamiento del Servidor de Base de Datos](#database-server)
+- [1. Aprovisionamiento del Servidor NFS](#aprov-nfs)
+- [2. Aprovisionamiento de los servidores web](#aprov-web)
 - [3. Aprovisionamiento de los Servidores Web](#web-servers)
 - [4. Aplicación del Balanceador de Carga](#load-balancer)
 - [5. Configuración en AWS](#aws-configuration)
 - [6. Disclaimer](#disclaimer)
 
-<a name="nfs-server"></a>
+<a name="aprov-nfs"></a>
 
 ## 1. Aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](provisionamientos_AWS/AWS_NFS_CesarGarcia.sh))
 

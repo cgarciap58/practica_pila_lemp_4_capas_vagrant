@@ -73,12 +73,4 @@
       db2.vm.provision "shell", path: "provisionDB2.sh"  
     end
 
-    # # # Máquina temporal de testeo
-    # config.vm.define "dbtest" do |dbt|
-    #   dbt.vm.hostname = "dbtest"
-    #   dbt.vm.network "private_network", ip: "192.168.30.105", virtualbox__intnet: "Red3"
-    #   dbt.vm.provision "shell", path: "testerPHP.sh"
-    # end
-
-
 end

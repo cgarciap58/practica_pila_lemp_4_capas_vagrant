@@ -37,7 +37,7 @@ if(isset($_POST['Submit'])) {
 		}
 
 		// link to the previous page
-		echo "<a href='javascript:self.history.back();' class='btn btn-primary'>Go Back</a>";
+		echo "<a href='javascript:self.history.back();' class='btn btn-primary'>Volver</a>";
 	} else {
 		// if all the fields are filled (not empty)
 

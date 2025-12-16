@@ -42,25 +42,9 @@ if [ ! -f "$APP_DIR/index.php" ]; then
 
     cd /tmp/
     git clone https://github.com/cgarciap58/practica_pila_lemp_4_capas_vagrant.git
-    sudo cp -r iaw-practica-lamp/src/* $APP_DIR/
-    sudo rm -rf iaw-practica-lamp
+    sudo cp -r practica_pila_lemp_4_capas_vagrant/src/* $APP_DIR/
+    sudo rm -rf practica_pila_lemp_4_capas_vagrant
     cd $APP_DIR
-
-    cat > config.php << 'EOF'
-<?php
-
-define('DB_HOST', '192.168.30.6');
-define('DB_NAME', 'web0app');
-define('DB_USER', 'dbuser');
-define('DB_PASSWORD', 'dbpass');
-
-$mysqli = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-
-if (!$mysqli) {
-    die('Database connection failed: ' . mysqli_connect_error());
-}
-?>
-EOF
 
 fi
 
