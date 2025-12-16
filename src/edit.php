@@ -11,15 +11,15 @@ if(isset($_POST['update'])) {
 	// checking empty fields
 	if(empty($name) || empty($age) || empty($email)) {
 		if(empty($name)) {
-			echo "<font color='red'>Name field is empty.</font><br/>";
+			echo "<font color='red'>El campo del nombre está vacío.</font><br/>";
 		}
 
 		if(empty($age)) {
-			echo "<font color='red'>Age field is empty.</font><br/>";
+			echo "<font color='red'>El campo de la edad está vacío.</font><br/>";
 		}
 
 		if(empty($email)) {
-			echo "<font color='red'>Email field is empty.</font><br/>";
+			echo "<font color='red'>El campo del e-mail está vacío.</font><br/>";
 		}
 	} else {
 		// updating the table

@@ -2,15 +2,14 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Add Data</title>
+	<title>Añadir Datos</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"  crossorigin="anonymous">
 </head>
 
 <body>
 <div class = "container">
 	<div class="jumbotron">
-		<h1 class="display-4">Simple LAMP web app</h1>
-		<p class="lead">Demo app</p>
+		<h1 class="display-4">Página de gestión de usuarios de César García</h1>
 	</div>
 
 
@@ -26,15 +25,15 @@ if(isset($_POST['Submit'])) {
 	// checking empty fields
 	if(empty($name) || empty($age) || empty($email)) {
 		if(empty($name)) {
-			echo "<div class='alert alert-danger' role='alert'>Name field is empty</div>";
+			echo "<div class='alert alert-danger' role='alert'>El nombre de edad está vacío</div>";
 		}
 
 		if(empty($age)) {
-			echo "<div class='alert alert-danger' role='alert'>Age field is empty</div>";
+			echo "<div class='alert alert-danger' role='alert'>El campo de edad está vacío</div>";
 		}
 
 		if(empty($email)) {
-			echo "<div class='alert alert-danger' role='alert'>Email field is empty</div>";
+			echo "<div class='alert alert-danger' role='alert'>El campo del e-mail está vacío</div>";
 		}
 
 		// link to the previous page
@@ -50,7 +49,7 @@ if(isset($_POST['Submit'])) {
 		mysqli_stmt_close($stmt);
 
 		// display success message
-		echo "<div class='alert alert-success' role='alert'>Data added successfully</div>";
+		echo "<div class='alert alert-success' role='alert'>¡Datos añadidos correctamente!</div>";
 		echo "<a href='index.php' class='btn btn-primary'>View Result</a>";
 	}
 }
