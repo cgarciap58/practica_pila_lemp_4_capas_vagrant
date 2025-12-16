@@ -8,7 +8,7 @@ Despliegue de una aplicación web de gestión de usuarios personalizada, en una 
 
 # Índice 
 
-- [1. Vídeo de demonstración](#video)
+- [1. Vídeo de demostración](#video)
 - [2. Introducción](#intro)
 - [3. Explicación del aprovisionamiento del Servidor NFS](#aprov-nfs)
 - [4. Explicación del aprovisionamiento de los servidores web](#aprov-web)
@@ -60,7 +60,7 @@ Otro desafío de la práctica es la gestión de PHP de manera totalmente separad
 
 <a name="aprov-nfs"></a>
 
-# 3. Explicación del aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](aprov_NFS_PHP_FPM.sh))
+# 3. Explicación del aprovisionamiento del Servidor NFS `provisionNFS_PHP.sh`
 
 Por cuestiones de importancia, tiene más sentido empezar explicando el servidor NFS + PHP-FPM porque es el primero en lanzarse y resulta vital para otros servicios.
 
@@ -84,7 +84,7 @@ sudo apt install -y mariadb-client
 
 ```
 
-Actualiza el repositorio e in
+Actualiza el repositorio e inicia la descarga de dependencias importantes.
 
 ```bash
 
@@ -346,7 +346,7 @@ sudo galera_new_cluster
 Detiene MariaDB, mata procesos residuales e inicializa este servidor como nodo maestro del cluster Galera.
 
 ---
-<a name="aprov-BBDD-1"></a>
+<a name="aprov-BBDD-2"></a>
 
 
 # 7. Explicación del aprovisionamiento de la BBDD, nodo 1 - `provisionDB2.sh`
