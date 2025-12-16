@@ -16,18 +16,9 @@ Despliegue de una aplicación web de gestión de usuarios personalizada, en una 
 - [6. Disclaimer](#disclaimer)
 
 
-con balanceo de carga Nginx, servidores web con PHP-FPM y NFS, proxy de bases de datos con HAProxy y clúster MariaDB.
-
-Este proyecto contiene scripts de aprovisionamiento para desplegar un sitio de WordPress altamente disponible en infraestructura Vagrant mediante 4 capas. El despliegue consta de cinco componentes principales:
-
-1. **Balanceador de carga Nginx** - Para distribuir el tráfico entre los servidores web
-2. **Servidores Web** - Para ejecutar WordPress con Nginx. Sirven páginas estáticas.
-3. **Servidor NFS+PHP-FPM** - Ejecuta el PHP que piden los servidores, y contiene los ficheros necesarios para mantener una sola 'fuente de verdad' entre los distintos servidores
-4. **Balanceado BBDD HAProxy** - Distribuye las conexiones a las bases de datos MariaDB en clúster
-5. **Clúster MariaDB** - Conjunto de servidores (dos) MariaDB en modo galera con HAProxy como balanceador
 
 
-# Prueba de funcionamiento
+# Vídeo demonstración
 
 ![Prueba de funcionamiento](./CapturaPantallaWP.png)
 
@@ -35,14 +26,15 @@ Este proyecto contiene scripts de aprovisionamiento para desplegar un sitio de W
 
 - [1. Aprovisionamiento del Servidor NFS](#aprov-nfs)
 - [2. Aprovisionamiento de los servidores web](#aprov-web)
-- [3. Aprovisionamiento de los Servidores Web](#web-servers)
-- [4. Aplicación del Balanceador de Carga](#load-balancer)
-- [5. Configuración en AWS](#aws-configuration)
-- [6. Disclaimer](#disclaimer)
+- [3. Aprovisionamiento del balanceador Web](#aprov-balanceador-web)
+- [4. Aprovisionamiento de la BBDD](#aprov-BBDD)
+- [5. Aprovisionamiento del balanceador de BBDD](#aprov-HAProxy)
+- [6. Configuración en PHP](#php-configuration)
+- [7. Disclaimer](#disclaimer)
 
 <a name="aprov-nfs"></a>
 
-## 1. Aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](provisionamientos_AWS/AWS_NFS_CesarGarcia.sh))
+## 1. Aprovisionamiento del Servidor NFS ([AWS_NFS_CesarGarcia.sh](aprov_NFS_PHP_FPM.sh))
 
 Este script configura un servidor NFS (Network File System) para compartir archivos de WordPress entre múltiples servidores web.
 
@@ -56,337 +48,21 @@ Este script configura un servidor NFS (Network File System) para compartir archi
 ### Explicación Detallada
 
 ```bash
-#!/bin/bash
-# Script para configurar servidor NFS en AWS para WordPress
-# Configura el hostname
-sudo hostnamectl set-hostname cesarGarciaNFS
-
-# Instala el servidor NFS
-sudo apt update
-sudo apt install -y nfs-kernel-server
-
-# Crea la carpeta compartida y da permisos al usuario de Apache
-sudo mkdir -p /srv/nfs/wordpress
-sudo chown -R www-data:www-data /srv/nfs/wordpress
-sudo chmod 755 /srv/nfs/wordpress
-
-# Exporta la carpeta a la subred donde están los webservers
-echo "/srv/nfs/wordpress 10.0.2.0/24(rw,sync,no_subtree_check)" | sudo tee /etc/exports
-
-# Aplica los exports y reinicia el servicio
-sudo exportfs -ra
-sudo systemctl enable nfs-kernel-server
-sudo systemctl restart nfs-kernel-server
-
-```
-
-<a name="database-server"></a>
-
-
-## 2. Aprovisionamiento del Servidor de Base de Datos ([AWS_DB_CesarGarcia.sh](provisionamientos_AWS/AWS_DB_CesarGarcia.sh))
-
-Este script configura un servidor MariaDB para WordPress con configuración segura.
-
-### Componentes Clave
-
-- **Instalación segura de MariaDB**: Instala el servidor y herramientas de red
-- **Creación de base de datos y usuario**: Configura WordPress con credenciales seguras
-- **Configuración de acceso remoto**: Permite conexiones desde los servidores web
-- **Medidas de seguridad**: Elimina usuarios y bases de datos por defecto
-
-### Explicación Detallada
-
-```bash
-
-# Configuración inicial
-sudo hostnamectl set-hostname cesarGarciaDB
-
-# Instalación de MariaDB y herramientas de red
-sudo apt update
-sudo apt install mariadb-server -y
-sudo apt install net-tools -y
-
-root_pass="roottoor"
-pass_wp="wppw"
-
-# Script equivalente a mysql_secure_installation
-sudo mariadb <<EOF
-DELETE FROM mysql.user WHERE User='';
-
-DROP USER IF EXISTS 'root'@'%';
-
-ALTER USER 'root'@'localhost' IDENTIFIED BY '$root_pass';
-
-DROP DATABASE IF EXISTS test;
-
-FLUSH PRIVILEGES;
-EOF
-
-# Configuración de base de datos y usuario
-mysql -u root -p"$root_pass" -e "CREATE DATABASE wordpress;"
-mysql -u root -p"$root_pass" -e "SHOW DATABASES;"
-mysql -u root -p"$root_pass" -e "CREATE USER 'wpuser'@'10.0.2.%' IDENTIFIED BY '$pass_wp';"
-mysql -u root -p"$root_pass" -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'10.0.2.%';"
-mysql -u root -p"$root_pass" -e "FLUSH PRIVILEGES;"
-
-echo "Base de datos y usuario configurados correctamente."
-echo "Contraseña root: $root_pass"
-echo "Contraseña wpuser: $pass_wp"
-
-# Configurar MariaDB para aceptar conexiones remotas en su IP (10.0.3.113)
-sudo sed -i "s/^bind-address\s*=.*/bind-address = 10.0.3.113/" /etc/mysql/mariadb.conf.d/50-server.cnf
-echo "MariaDB configurado para aceptar conexiones remotas en 10.0.3.113"
-sudo systemctl restart mariadb
-```
-
-<a name="web-servers"></a>
-
-## 3. Aprovisionamiento de los Servidores Web ([AWS_WS_CesarGarcia.sh](provisionamientos_AWS/AWS_WS_CesarGarcia.sh))
-
-Este script configura servidores web Apache con PHP y monta el recurso NFS compartido.
-
-### Componentes Clave
-
-- **Instalación de Apache y PHP**: Configura el servidor web y el runtime de PHP
-- **Montaje del recurso NFS**: Accede al directorio compartido del servidor NFS
-- **Permisos y seguridad**: Establece los permisos adecuados para WordPress
-- **Instalación de WordPress**: Descarga e instala WordPress desde la fuente oficial
-- **Configuración inicial de WordPress**: Prepara la instalación básica
-
-### Explicación detallada
-
-```bash
 
 #!/bin/bash
-# Script de provisionamiento para el servidor web
-
-# Credenciales de WordPress
-user_wp="wpuser"
-pass_wp="wppw"
-ip_db="10.0.3.113"
-db_wp="wordpress"
-
-
-sudo hostnamectl set-hostname cesarGarciaWS
-
-# Instala Apache y configura los servicios básicos
+# Script de provisionamiento para el servidor NFS + PHP-FPM
+# Instala PHP-FPM y configura los servicios básicos
+# Monta la app en el servidor NFS
+# Este script se ejecuta antes de los servidores web en el orden de VagrantFile, así que todo bien.
 
 sudo apt update
-sudo apt install apache2 -y
-sudo apt install mariadb-client -y
-sudo apt install libapache2-mod-php -y
-sudo apt install php php-mysql php-cli php-curl php-gd php-mbstring php-xml php-xmlrpc php-soap php-intl -y
-sudo systemctl restart apache2.service
 
-# Instala un cliente NFS y monta la carpeta del servidor NFS. 
-# Añade la entrada al fstab para montaje permanente
-sudo apt install nfs-common -y
-sudo mkdir -p /var/www/html
-sudo mount 10.0.2.143:/srv/nfs/wordpress /var/www/html
-echo "10.0.2.143:/srv/nfs/wordpress /var/www/html nfs defaults,_netdev 0 0" | sudo tee -a /etc/fstab
-
-# Borramos el archivo de bienvenida de Apache para que WordPress sea la página principal
-# Solo ejecuta si dicho archivo existe en la carpeta compartida del servidor NFS
-if [ -f /var/www/html/index.html ]; then
-    sudo -u www-data rm /var/www/html/index.html
-fi
-
-# Reinicia Apache para aplicar los cambios
-sudo systemctl restart apache2
-
-
-# En el caso de que no encuentre wp-config.php, instala WordPress y lo configura
-if [ ! -f /var/www/html/wp-config.php ]; then
-    echo "Aún no existe wordpress, descargándolo..."
-
-    cd /tmp/
-    # Descarga Wordpress
-    wget https://wordpress.org/latest.tar.gz
-
-    # Descomprime el archivo tar.gz
-    tar -xzf latest.tar.gz
-
-    # Copia los archivos de WordPress a la carpeta web 
-    # Carpeta NFS. Por lo tanto utiliza el usuario www-data
-    sudo -u www-data cp -r wordpress/* /var/www/html/
-    sudo rm -rf wordpress latest.tar.gz
-
-    cd /var/www/html
-    # Mediante usuario permitido, copia el archivo de configuración
-    sudo -u www-data cp wp-config-sample.php wp-config.php
-
-    # Configura WordPress con nuestras credenciales
-    echo "Configurando WordPress con las credenciales"
-    sudo -u www-data sed -i "s/'database_name_here'/'$db_wp'/g" wp-config.php
-    sudo -u www-data sed -i "s/'username_here'/'$user_wp'/g" wp-config.php
-    sudo -u www-data sed -i "s/'password_here'/'$pass_wp'/g" wp-config.php
-    sudo -u www-data sed -i "s/'localhost'/'$ip_db'/" wp-config.php
-    sudo -u www-data sed -i "/That's all, stop editing!/i \
-if (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') { \
-    \$_SERVER['HTTPS'] = 'on'; \
-    \$_SERVER['SERVER_PORT'] = 443; \
-} \
-" wp-config.php
-fi
-
-# Reinicia el servicio Apache para aplicar los cambios
-sudo systemctl restart apache2
-```
-
-<a name="load-balancer"></a>
-
-
-## 4. Aplicación del Balanceador de Carga ([AWS_LB_CesarGarcia.sh](provisionamientos_AWS/AWS_LB_CesarGarcia.sh))
-
-### Componentes Clave
-
-- **Instalación de Apache y reto de CertBot**: Configura el servidor web y obtiene el certificado SSL
-- **Instalación de HAProxy**: Configura el balanceador de carga
-- **Redirección HTTP a HTTPS**: Redirige todo el tráfico entrante a HTTPS
-- **Configuración de balanceo**: Configura el balanceo entre los servidores web
-
-### Explicación detallada
-
-```bash
-#!/bin/bash
-# Script para balanceador de carga en AWS para WordPress pero que permite pasar el reto Certbot
-
-# Establece variables de dominio y correo
-DOMAIN="wpdecesar.ddns.net"
-EMAIL="cgarciap58@iesalbarregas.es"
-
-# Configura nombre del servidor
-sudo hostnamectl set-hostname cesarGarciaLB
-
-# Instala Apache y Certbot para obtener el certificado SSL
-sudo apt update
-sudo apt install -y apache2 certbot python3-certbot-apache
-
-sudo certbot --apache -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
-
-
-# Combina certificado y clave privada en un solo archivo para HAProxy
-sudo cat /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
-        /etc/letsencrypt/live/$DOMAIN/privkey.pem \
-        | sudo tee /etc/haproxy/$DOMAIN.pem
-
-sudo apt install -y haproxy
-
-# Se reescribe haproxy.cfg
-sudo tee /etc/haproxy/haproxy.cfg >/dev/null <<'EOF'
-global
-    maxconn 2048
-    log /dev/log local0
-
-defaults
-    mode http
-    option httplog
-    option dontlognull
-    timeout connect 5s
-    timeout client 50s
-    timeout server 50s
-
-# Redirección HTTP -> HTTPS
-frontend http_front
-    bind *:80
-    redirect scheme https code 301
-
-# Terminación HTTPS, apuntando a nuestro certificado SSL para el dominio
-frontend https_front
-    bind *:443 ssl crt /etc/haproxy/$DOMAIN.pem
-    option forwardfor
-    http-request set-header X-Forwarded-Proto https
-    default_backend wordpress_nodes
-
-
-# Backend para los servidores WordPress
-backend wordpress_nodes
-    balance roundrobin
-    option httpchk GET /
-    server ws1 10.0.2.235:80 check
-    server ws2 10.0.2.141:80 check
-EOF
-
-# Necesario parar y deshabilitar apache para que no se pelee con HAProxy en los puertos 80 y 443
-sudo systemctl stop apache2
-sudo systemctl disable apache2
-
-# Reinicia HAProxy para aplicar la configuración
-sudo systemctl restart haproxy
+# Configurar PHP-FPM
+sudo apt install -y php-fpm 
+sudo apt install -y php8.2-mysql
+sudo apt install -y php8.2-mysql php8.2-curl php8.2-zip
+sudo apt install -y mariadb-client
 
 ```
 
-## 5. Configuración en AWS
-
-### Subredes
-
-![Subredes AWS](./capturasAWS/subredes.png)
-
-Las subredes están configuradas para soportar la arquitectura de alta disponibilidad con balanceo de carga.
-
-- **Subred pública**: 10.0.1.0/24 (para el balanceador)
-- **Subred privada**: 10.0.2.0/24 (para los servidores web y el servidor NFS)
-- **Subred de base de datos**: 10.0.3.0/24 (para la instancia RDS, totalmente inaccesible al LB)
-
-### Instancias
-
-![Instancias AWS](./capturasAWS/instancias.png)
-
-Contamos con cinco instancias en total: una para el balanceador de carga y cuatro para los servidores web.
-- **Balanceador**: Asociado a una ip elástica para acceso externo. Más detalles en la sección de IP Elástica. La IP privada es la 10.0.1.90 (asignada dinámicamente por AWS). Esta es la única instancia en la red pública.
-
-- **Servidores web**: WS1 (10.0.2.235) y WS2 (10.0.2.141). Tienen Apache instalados, y la carpeta NFS montada. Se encargan de descargar Wordpress si aún no está instalado, y de servir las páginas web después de que el balanceador se lo pide. Se alternan, mediante sistema round robin.
-
-- **Servidor NFS**: nfs (10.0.2.101), aloja los archivos de WordPress compartidos entre los servidores web y es accesible solo desde los servidores web. Le da permisos a los usuarios www-data para escribir en el directorio compartido, de tal forma que WordPress puede funcionar sin problema.
-
-- **Base de datos**: Servidor con BBDD MariaDB, alojado en la subred de base de datos y accesible solo desde los equipos en la subred 10.0.2.0/24 para dar acceso a los servidores web, evitando el acceso directo desde la red pública.
-
-### Route tables
-
-![Route tables AWS](./capturasAWS/route_tables.png)
-
-Las tablas de ruta se aplican una a cada subred: 
-
-- **Wordpress-RT-Publica**: Permite acceso a Internet mediante IGW.
-
-- **Wordpress-RT-Privada-WS+NFS**: No tiene ruta por defecto, restringe acceso a Internet.
-
-- **Wordpress-RT-Privada-DB**: No tiene ruta por defecto, restringe acceso a Internet.
-
-### Grupos de seguridad
-
-![Grupos de seguridad AWS](./capturasAWS/grupos_seguridad.png)
-
-
-- **Wordpress-SG-Public-CesarGarcia**
--- Entrante: Permite tráfico HTTP (80), HTTPS (443) y SSH (22) desde cualquier IP.
--- Saliente: Permite todo el tráfico saliente.
-
-- **Wordpress-SG-WebServer-CesarGarcia**
--- Entrante: Solo SSH desde el LB y HTTP desde el LB (balanceador)
--- Saliente: Permite todo el tráfico saliente.
-
-- **Wordpress-SG-NFS-CesarGarcia**
--- Entrante: Permite tráfico NFS solo desde los servidores web.
--- Saliente: Permite todo el tráfico saliente.
-
-- **Wordpress-SG-DB-CesarGarcia**
--- Entrante: Permite tráfico MySQL solo desde los servidores web, y SSH desde el servidor NFS (para mantenimiento).
--- Saliente: Permite todo el tráfico saliente.
-
-
-### IP Elástica y dominio
-
-![IP Elástica AWS](./capturasAWS/ip_elastica.png)
-
-Solo contamos con una en la 3.222.135.210, asociada al balanceador. Además, hemos conseguido un dominio y lo hemos asociado a esa IP utilizando noip. El dominio es wpdecesar.ddns.net.
-
-![Configuración NoIP](./capturasAWS/noip.png)
-
-# Disclaimer
-
-Este trabajo fue realizado por César García y se hizo para la asignatura de Implantación de Aplicaciones Web enseñada por Carlos González.
-
-Seguramente, contenga fallos de seguridad y bajo ningún concepto debe considerarse una implementación segura para un entorno de producción. Es simplemente un ejercicio académico.
-
-Si este código es útil para ti de cualquier forma, por favor, menciona la fuente, me llevó muchas, muchas, muchas horas de trabajo. ¡Gracias!
+Actualiza el repositorio 

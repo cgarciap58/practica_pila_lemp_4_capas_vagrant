@@ -18,6 +18,8 @@ $result = mysqli_query($mysqli, "SELECT * FROM users ORDER BY id DESC");
 <div class = "container">
 	<div class="jumbotron">
       <h1 class="display-4">Página de gestión de usuarios de César García</h1>
+	  <p class="lead">Práctica de implementación de aplicaciones web, infrastructura de 4 capas</p>
+
     </div>	
 	<a href="add.html" class="btn btn-primary">Añadir más datos</a><br/><br/>
 	<table width='80%' border=0 class="table">

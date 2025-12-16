@@ -54,40 +54,40 @@ mysqli_close($mysqli);
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Edit Data</title>
+	<title>Editar datos</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"  crossorigin="anonymous">
 </head>
 
 <body>
 <div class = "container">
 	<div class="jumbotron">
-		<h1 class="display-4">Simple LAMP web app</h1>
-		<p class="lead">Demo app</p>
+		<h1 class="display-4">Página de gestión de usuarios de César García</h1>
+		<p class="lead">Práctica de implementación de aplicaciones web, infrastructura de 4 capas</p>
 	</div>
 
-	<a href="index.php" class="btn btn-primary">Home</a>
+	<a href="index.php" class="btn btn-primary">Inicio</a>
 	<br/><br/>
 
 	<form name="form1" method="post" action="edit.php">
 
 		<div class="form-group">
-			<label for="name">Name</label>
+			<label for="name">Nombre</label>
 			<input type="text" class="form-control" name="name" value="<?php echo $name;?>">
 		</div>
 
 		<div class="form-group">
-			<label for="name">Age</label>
+			<label for="name">Edad</label>
 			<input type="text" class="form-control" name="age" value="<?php echo $age;?>">
 		</div>
 
 		<div class="form-group">
-			<label for="name">Email</label>
+			<label for="name">E-mail</label>
 			<input type="text" class="form-control" name="email" value="<?php echo $email;?>">
 		</div>
 
 		<div class="form-group">
 			<input type="hidden" name="id" value=<?php echo $_GET['id'];?>>
-			<input type="submit" name="update" value="Update" class="form-control" >
+			<input type="submit" name="update" value="Actualizar" class="form-control" >
 		</div>
 
 	</form>

@@ -10,6 +10,8 @@
 <div class = "container">
 	<div class="jumbotron">
 		<h1 class="display-4">Página de gestión de usuarios de César García</h1>
+		<p class="lead">Práctica de implementación de aplicaciones web, infrastructura de 4 capas</p>
+
 	</div>
 
 
