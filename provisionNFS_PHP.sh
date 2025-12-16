@@ -49,7 +49,7 @@ if [ ! -f "$APP_DIR/index.php" ]; then
     cat > config.php << 'EOF'
 <?php
 
-define('DB_HOST', '192.168.30.7');
+define('DB_HOST', '192.168.30.6');
 define('DB_NAME', 'web0app');
 define('DB_USER', 'dbuser');
 define('DB_PASSWORD', 'dbpass');

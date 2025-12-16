@@ -3,7 +3,7 @@
 # Instala MariaDB y configura los servicios básicos
 
 sudo apt update
-sudo apt install mariadb-server -y
+sudo apt install mariadb-server mariadb-backup galera-4 -y
 sudo apt install net-tools -y
 
 root_pass="roottoor"
@@ -45,13 +45,31 @@ mysql -u root -p"$root_pass" -e "USE $db; CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 "
 
+sudo systemctl restart mariadb
+
+sudo tee /etc/mysql/mariadb.conf.d/90-galera.cnf > /dev/null <<'EOF'
+[mysqld]
+wsrep_on=ON
+wsrep_provider=/usr/lib/galera/libgalera_smm.so
+wsrep_cluster_name=galera_cluster
+wsrep_cluster_address=gcomm://192.168.40.7,192.168.40.8
+
+wsrep_node_name=db1
+wsrep_node_address=192.168.40.7
+
+binlog_format=ROW
+default_storage_engine=InnoDB
+innodb_autoinc_lock_mode=2
+
+bind-address=192.168.40.7
+EOF
 
 
 echo "Base de datos y usuario configurados correctamente."
 echo "Contraseña root: $root_pass"
 echo "Contraseña dbuser: $pass_db"
 
-# Configurar MariaDB para aceptar conexiones remotas en su IP (192.168.30.7)
-sudo sed -i "s/^bind-address\s*=.*/bind-address = 192.168.30.7/" /etc/mysql/mariadb.conf.d/50-server.cnf
-echo "MariaDB configurado para aceptar conexiones remotas en 192.168.30.7"
-sudo systemctl restart mariadb
+# Reiniciar MariaDB para aplicar los cambios
+sudo systemctl stop mariadb
+sudo pkill -f mariadbd
+sudo galera_new_cluster
